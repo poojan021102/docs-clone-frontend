@@ -1,5 +1,5 @@
-export const BACKEND_BASE_URI: string = "http://localhost:3000"
-export const AI_SUGGESTION_BASE_URI: string = "http://localhost:3002"
+export const BACKEND_BASE_URI: string = "https://docs-clone-backend-adx5.onrender.com"
+export const AI_SUGGESTION_BASE_URI: string = "https://docs-clone-generative-ai.onrender.com"
 // Auth
 export const BACKEND_AUTH_URI: string = BACKEND_BASE_URI + "/auth";
 export const LOGIN_URI: string = BACKEND_AUTH_URI + "/login";
@@ -54,4 +54,4 @@ export const QUILL_OPTIONS = [
     ['clean']                                         // remove formatting button
   ];
 
-export const SOCKET_SERVER_URL = "http://localhost:3001";
+export const SOCKET_SERVER_URL = "https://docs-clone-socket.onrender.com1";
