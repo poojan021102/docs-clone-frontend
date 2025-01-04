@@ -16,3 +16,5 @@ Here are the following technology used in this front end code:
   <li><strong>Socket IO Client: </strong>It is a client side socket library that is used make real time event based communication, to allow other user to interract with the same document.</li>
   <li><strong>Quill Cursor: </strong>It is a module which integrates with quill to show cursors of other users in the quill editor.</li>
 </ol>
+
+The UI is deployed in: https://warm-tapioca-a8539e.netlify.app/
