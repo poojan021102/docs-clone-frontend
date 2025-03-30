@@ -18,3 +18,10 @@ Here are the following technology used in this front end code:
 </ol>
 
 The UI is deployed in: https://warm-tapioca-a8539e.netlify.app/
+
+## Other Source Codes
+Backend: https://github.com/poojan021102/docs-clone-backend
+<br>
+Socket Server: https://github.com/poojan021102/docs-clone-socket
+<br>
+Generative AI Server: https://github.com/poojan021102/docs-clone-socket
