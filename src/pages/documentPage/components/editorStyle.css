@@ -1,20 +1,29 @@
-.container .ql-editor{
-    width: 100vw;
+#container .ql-editor {
+  width: 100vw;
 }
 
-.ql-toolbar{
-    width: 100vw;
+#container {
+  min-height: 100vh;
 }
-.ql-container{
-    width: 85%;
-    background-color: white;
-    margin: 10px;
-    border-radius: 2px;
-    box-shadow: 0 0 5px 0 rgba(0,0,0,0.3);
-    min-height: 100%;
+
+.ql-toolbar {
+  width: 100%;
+}
+.ql-container {
+  width: 65%;
+  background-color: white;
+  margin: 10px;
+  border-radius: 2px;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.3);
 }
 @media (max-width: 768px) {
-    .ql-container {
-        width: 100%;
-    }
+  .ql-container {
+    width: 87%;
+    margin: 10px;
+  }
+}
+
+.ql-editor {
+  min-height: 100vh;
+  padding: 25px;
 }
