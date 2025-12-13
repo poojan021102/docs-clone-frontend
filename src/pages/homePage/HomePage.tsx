@@ -36,8 +36,8 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen w-screen overflow-hidden flex justify-center items-center bg-gradient-to-br from-slate-50 via-white to-slate-100 py-8">
-      <div className="w-[85%] max-w-6xl h-[86vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex items-center justify-between overflow-hidden">
+    <div className="min-h-screen overflow-hidden flex justify-center items-center bg-gradient-to-br from-slate-50 via-white to-slate-100 py-8">
+      <div className="w-[85%] h-[86vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex items-center justify-between overflow-hidden">
         <div className="flex flex-col justify-center items-center h-[100%] w-[100%] md:w-[50%]">
           {/* Login and Logout Component */}
           {getAppContext().loggedInStatus === "inProgress"
