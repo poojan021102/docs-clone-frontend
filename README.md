@@ -17,8 +17,6 @@ Here are the following technology used in this front end code:
   <li><strong>Quill Cursor: </strong>It is a module which integrates with quill to show cursors of other users in the quill editor.</li>
 </ol>
 
-The UI is deployed in: https://warm-tapioca-a8539e.netlify.app/
-
 ## Other Source Codes
 Backend: https://github.com/poojan021102/docs-clone-backend
 <br>
