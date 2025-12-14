@@ -10,30 +10,9 @@ import QuillCursors from "quill-cursors";
 import { getAISuggestion } from "../../../utilities/api";
 import { Link } from "react-router-dom";
 import ShareDialogBox from "../../../components/ShareDialogBox";
-import { Lock } from "lucide-react";
+import { Share2, Home, FileText, ArrowLeft } from "lucide-react";
 
 Quill.register("modules/cursors", QuillCursors);
-
-interface CursorState {
-  isAICalled: "not_started_writing" | "not_called" | "in_progress" | "called";
-  cursorIndex: number;
-  lastMoved: Date;
-}
-
-interface UserSocketData {
-  user: any;
-  socketId: string;
-  email: string;
-}
-
-interface TextChangeData {
-  delta: any;
-}
-
-interface RangeData {
-  index: number;
-  length: number;
-}
 
 type Props = {
   documentId: string;
@@ -50,8 +29,8 @@ export default function ShowEditor({
 }: Props) {
   const [socket, setSocket] = useState<any>(null);
   const [quill, setQuill] = useState<Quill | undefined>(undefined);
-  const [cursor, setCursor] = useState<any>(null);
-  const cursorState = useRef<CursorState | null>(null);
+  const [cursor, setCursor] = useState(null);
+  const cursorState = useRef(null);
   const selectedDocument = useRef({
     documentId: "",
     documentTitle: "",
@@ -75,18 +54,64 @@ export default function ShowEditor({
     q.setContents(documentContent);
     setCursor(q.getModule("cursors"));
     cursorState.current = {
-      isAICalled: "not_started_writing" as const,
+      isAICalled: "not_started_writing",
       cursorIndex: q.getLength(),
       lastMoved: new Date(),
     };
   }, []);
 
-  const colors = ["blue", "red", "orange", "green"];
+  const handleNewUserConnectionServerToClient = (args) => {
+    toast(
+      `${args.user.firstName + args.user.lastName} (${args.user.email}) joined`
+    );
+  };
 
-  function pickRandomString(arr: string[]): string {
-    const randomIndex = Math.floor(Math.random() * arr.length);
-    return arr[randomIndex];
-  }
+  const handleDisconnectingServerToClient = (args) => {
+    toast(
+      `${args.user.firstName + args.user.lastName} (${
+        args.user.email
+      }) disconnected`
+    );
+    cursor.removeCursor(args.socketId);
+  };
+
+  const handleEditorSelectionChange = (range, _, source) => {
+    socket.emit("editorSelectionChangeClientToServer", {
+      range,
+      user: appContext.user,
+      documentId,
+    });
+  };
+
+  const handleEditorOnTextChange = (delta, _, source) => {
+    if (source == "api") return;
+    // aiSuggestion.current = "";
+
+    cursorState.current = {
+      cursorIndex: quill?.getSelection().index,
+      lastMoved: new Date(),
+      isAICalled: "not_called",
+    };
+    socket.emit("textChangeClientToServer", {
+      delta,
+      documentId,
+      content: quill?.getContents(),
+    });
+  };
+
+  const handleEditorSelectionChangeServerToClient = (args) => {
+    cursor.createCursor(
+      args.socketId,
+      args.user.firstName + args.user.lastName,
+      args.user.color ? args.user.color : "black"
+    );
+    cursor.moveCursor(args.socketId, args.range); // <== cursor data from previous step
+    cursor.toggleFlag(args.socketId, true);
+  };
+
+  const handleTextChangeServerToClient = (args) => {
+    quill?.updateContents(args.delta);
+  };
 
   useEffect(() => {
     if (!quill || !socket || !appContext || !appContext.user) return;
@@ -95,74 +120,21 @@ export default function ShowEditor({
       documentId,
       user: appContext.user,
     });
-
-    const onUserConnected = (args: UserSocketData) => {
-      toast(
-        `${args.user.firstName + args.user.lastName} (${
-          args.user.email
-        }) joined`
-      );
-    };
-
-    const onDisconnecting = (args: UserSocketData) => {
-      toast(
-        `${args.user.firstName + args.user.lastName} (${
-          args.user.email
-        }) disconnected`
-      );
-      cursor?.removeCursor(args.socketId);
-    };
-
-    const onTextChange = (delta: any, _: any, source: any) => {
-      if (source === "user") {
-        cursorState.current = {
-          cursorIndex: quill?.getSelection()?.index || 0,
-          lastMoved: new Date(),
-          isAICalled: "not_called" as const,
-        };
-        socket.emit("textChangeClientToServer", {
-          delta,
-          documentId,
-          content: quill?.getContents(),
-        });
-      }
-    };
-
-    const onTextChangeFromServer = (args: TextChangeData) => {
-      quill?.updateContents(args.delta, "api");
-    };
-
-    const onSelectionChange = (range: RangeData, _: any) => {
-      socket.emit("editorSelectionChangeClientToServer", {
-        range,
-        user: appContext.user,
-        documentId,
-      });
-    };
-
-    const onSelectionChangeFromServer = (args: any) => {
-      cursor?.createCursor(
-        args.socketId,
-        args.user.firstName + args.user.lastName,
-        pickRandomString(colors)
-      );
-      cursor?.moveCursor(args.socketId, args.range);
-      cursor?.toggleFlag(args.socketId, true);
-    };
-
-    socket.on("userConnectedServerToClient", onUserConnected);
-    socket.on("disconnectingServerToClient", onDisconnecting);
-    quill.on("text-change", onTextChange);
-    socket.on("textChangeServerToClient", onTextChangeFromServer);
-    quill.on("selection-change", onSelectionChange);
+    socket.on(
+      "userConnectedServerToClient",
+      handleNewUserConnectionServerToClient
+    );
+    socket.on("disconnectingServerToClient", handleDisconnectingServerToClient);
+    quill.on("text-change", handleEditorOnTextChange);
+    socket.on("textChangeServerToClient", handleTextChangeServerToClient);
+    quill.on("selection-change", handleEditorSelectionChange);
     socket.on(
       "editorSelectionChangeServerToClient",
-      onSelectionChangeFromServer
+      handleEditorSelectionChangeServerToClient
     );
-
     const interval = setInterval(async () => {
       const currentDate = new Date();
-      const previousDate = cursorState.current?.lastMoved;
+      const previousDate = cursorState.current.lastMoved;
       if (
         cursorState.current &&
         quill &&
@@ -176,24 +148,20 @@ export default function ShowEditor({
         const response = await getAISuggestion(
           quill.getText().substring(0, cursorState.current.cursorIndex)
         );
-
+        // const response = {
+        //     status: true,
+        //     response: "AI Response"
+        // }
         if (response.status && previousDate == cursorState.current.lastMoved) {
           if ("response" in response && response.response) {
-            const aiText = String(response.response);
-            quill.insertText(cursorState.current.cursorIndex, aiText, "api");
-            quill.setSelection(cursorState.current.cursorIndex + aiText.length);
-
-            // Emit AI suggestion to other users
-            socket.emit("textChangeClientToServer", {
-              delta: {
-                ops: [
-                  { retain: cursorState.current.cursorIndex },
-                  { insert: aiText },
-                ],
-              },
-              documentId,
-              content: quill?.getContents(),
-            });
+            quill.insertText(
+              cursorState.current.cursorIndex,
+              response.response,
+              "user"
+            );
+            quill.setSelection(
+              cursorState.current.cursorIndex + response.response.length
+            );
           }
         }
 
@@ -201,36 +169,29 @@ export default function ShowEditor({
       }
     }, 2000);
 
-    const onDisconnect = () => {
-      socket.emit("disconnectingClientToServer", {
-        documentId,
-        user: appContext.user,
-      });
-    };
-
-    socket.on("disconnect", onDisconnect);
-
     return () => {
       socket.emit("disconnectingClientToServer", {
         documentId,
         user: appContext.user,
       });
-
-      socket.off("userConnectedServerToClient", onUserConnected);
-      socket.off("disconnectingServerToClient", onDisconnecting);
-      socket.off("textChangeServerToClient", onTextChangeFromServer);
-      quill.off("text-change", onTextChange);
+      socket.on(
+        "disconnectingServerToClient",
+        handleDisconnectingServerToClient
+      );
+      socket.off(
+        "userConnectedServerToClient",
+        handleNewUserConnectionServerToClient
+      );
+      socket.off("textChangeServerToClient", handleTextChangeServerToClient);
+      quill.off("text-change", handleEditorOnTextChange);
       socket.off(
         "editorSelectionChangeServerToClient",
-        onSelectionChangeFromServer
+        handleEditorSelectionChangeServerToClient
       );
-      quill.off("selection-change", onSelectionChange);
-      socket.off("disconnect", onDisconnect);
-
       clearInterval(interval);
       socket.disconnect();
     };
-  }, [socket, quill, appContext, documentId]);
+  }, [socket, quill]);
 
   const handleShareDocumentClick = () => {
     setShowModal(true);
@@ -239,7 +200,7 @@ export default function ShowEditor({
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {showModal && (
         <ShareDialogBox
           selectedDocument={selectedDocument}
@@ -247,33 +208,46 @@ export default function ShowEditor({
         />
       )}
 
-      <div className="pl-3 mb-3 mt-3 pr-5 w-[100%] flex flex-wrap items-center justify-between">
-        <div className="mb-2 text-2xl font-semibold">{documentTitle}</div>
-        <div className="flex justify-between items-center">
-          <Link
-            className="pr-3 underline text-slate-400 active:scale-90 transition-transform"
-            to="/allDocuments"
-          >
-            Home
-          </Link>
-          <button
-            onClick={() => {
-              handleShareDocumentClick();
-            }}
-            className="bg-blue-300 hover:bg-blue-400 p-1 pl-5 pr-5 text-lg font-semibold rounded-3xl flex items-center active:scale-90 transition-transform"
-          >
-            <Lock size={18} color="#000000" />
-            <div>Share</div>
-          </button>
+      {/* Document Title Bar - Full Width */}
+      <div className="w-full bg-white border-b border-slate-200 shadow-sm sticky top-0">
+        <div className="px-6 md:px-8 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          {/* Title Section */}
+          <div className="flex flex-col flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent truncate">
+              {documentTitle || "Untitled Document"}
+            </h1>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Link
+              to="/allDocuments"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 font-semibold text-sm border border-slate-300 hover:shadow-md active:scale-95"
+            >
+              <ArrowLeft size={16} />
+              <span className="hidden md:inline">Back</span>
+            </Link>
+            <button
+              onClick={() => {
+                handleShareDocumentClick();
+              }}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg active:scale-95"
+            >
+              <Share2 size={16} />
+              <span className="hidden md:inline">Share</span>
+            </button>
+          </div>
         </div>
       </div>
-      {/* <div className="flex justify-center items-center h-full"> */}
-      <div
-        id="container"
-        className="flex flex-col items-center"
-        ref={wrapperRef}
-      ></div>
-      {/* </div> */}
+
+      {/* Editor Container - Full Width */}
+      <div className="w-full">
+        <div
+          id="container"
+          className="w-full min-h-[calc(100vh-150px)]"
+          ref={wrapperRef}
+        ></div>
+      </div>
     </div>
   );
 }
