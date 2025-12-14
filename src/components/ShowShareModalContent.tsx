@@ -6,6 +6,7 @@ import useAppContext from "../context/useAppContext";
 import useAppCookie from "../customHooks/useAppCookie";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Mail, X, UserPlus } from "lucide-react";
 
 type Props = {
   documentId: string;
@@ -155,68 +156,92 @@ export default function ShowShareModalContent({
   const showSharedEmail = (email: string, index: number) => {
     return (
       <div
-        className="bg-white w-[95%] p-2 flex flex-wrap justify-between rounded-sm m-2 shadow-md text-xs md:text-sm hover:shadow-lg"
+        className="bg-white p-4 flex items-center justify-between rounded-xl m-2 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-200"
         key={email}
       >
-        <div>{email}</div>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+            <Mail className="w-5 h-5 text-blue-600" />
+          </div>
+          <span className="text-slate-900 font-medium text-sm">{email}</span>
+        </div>
         <button
           onClick={() => {
             handleRemoveAccess(email, index);
           }}
-          className="bg-slate-200 hover:bg-slate-300 p-1 text-xs md:text-sm rounded-sm pl-2 pr-2 active:scale-90 transition-transform"
+          className="ml-2 p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-all duration-200 border border-red-200 active:scale-90"
+          title="Remove access"
         >
-          Remove
+          <X className="w-4 h-4" />
         </button>
       </div>
     );
   };
   const showShareDetail = () => {
     return (
-      <div className="p-2 mt-1">
-        <form
-          className="flex flex-wrap items-center"
-          onSubmit={handleSubmit(handleAddEmail)}
-        >
-          <input
-            className="p-1 pl-2 pr-2 bg-slate-200 mr-2 rounded-sm md:rounded-md text-xs md:text-lg w-[80%] outline-none"
-            type="email"
-            {...register("userEmail", { required: "Email is required" })}
-          />
-          <input
-            type="submit"
-            value="Share"
-            className="bg-blue-500 hover:bg-blue-600 p-1 pl-2 pr-2 rounded-sm md:rounded-md cursor-pointer text-xs md:text-lg text-slate-200 active:scale-90 transition-transform"
-          />
-        </form>
+      <div className="space-y-6">
+        {/* Share Form */}
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-slate-700">
+            Share with email
+          </label>
+          <form
+            className="flex flex-col md:flex-row gap-2"
+            onSubmit={handleSubmit(handleAddEmail)}
+          >
+            <div className="flex-1 relative">
+              <Mail className="absolute left-3 top-3.5 h-5 w-5 text-slate-400" />
+              <input
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 text-sm"
+                type="email"
+                placeholder="Enter email address..."
+                {...register("userEmail", { required: "Email is required" })}
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 flex items-center gap-2 active:scale-95 text-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              Share
+            </button>
+          </form>
 
-        <div className="h-[50px]">
-          {errors && errors.userEmail ? (
-            <p className="text-red-500 text-sm md:text-md">
-              {errors.userEmail?.message}
-            </p>
-          ) : (
-            <p></p>
-          )}
-          {errors &&
-          errors.userEmail &&
-          errors.userEmail.types &&
-          "customMessage" in errors.userEmail.types ? (
-            <p className="text-red-500 text-sm md:text-md">
-              {errors.userEmail?.types.customMessage}
-            </p>
-          ) : (
-            <p></p>
-          )}
+          {/* Error Messages */}
+          <div className="min-h-6">
+            {errors && errors.userEmail ? (
+              <p className="text-red-600 text-sm font-medium">
+                {errors.userEmail?.message}
+              </p>
+            ) : null}
+            {errors &&
+            errors.userEmail &&
+            errors.userEmail.types &&
+            "customMessage" in errors.userEmail.types ? (
+              <p className="text-red-600 text-sm font-medium">
+                {errors.userEmail?.types.customMessage}
+              </p>
+            ) : null}
+          </div>
         </div>
 
-        <div className="flex flex-col justify-center">
-          <div className="bg-slate-200 h-[200px] overflow-scroll rounded-sm">
+        {/* Shared Users List */}
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-slate-700">
+            Shared with ({allUserEmail.length})
+          </label>
+          <div className="max-h-64 overflow-y-auto rounded-xl bg-slate-50 border border-slate-200 p-3 space-y-2">
             {internalLoading ? (
               <Loading message="" />
-            ) : (
+            ) : allUserEmail.length > 0 ? (
               allUserEmail.map((email, index) => {
                 return showSharedEmail(email, index);
               })
+            ) : (
+              <div className="py-8 text-center">
+                <UserPlus className="w-12 h-12 text-slate-300 mx-auto mb-2 opacity-50" />
+                <p className="text-slate-500 text-sm">No one has access yet</p>
+              </div>
             )}
           </div>
         </div>
@@ -224,8 +249,7 @@ export default function ShowShareModalContent({
     );
   };
   return (
-    <div className="w-[100%]">
-      <h1 className="text-xl font-semi-bold md:text-3xl md:font-bold">Share</h1>
+    <div className="w-full">
       {loading || !documentId.length || !documentTitle.length ? (
         <Loading message="Fetching details" />
       ) : (

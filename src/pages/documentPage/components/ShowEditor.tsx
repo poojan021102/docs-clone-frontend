@@ -10,7 +10,7 @@ import QuillCursors from "quill-cursors";
 import { getAISuggestion } from "../../../utilities/api";
 import { Link } from "react-router-dom";
 import ShareDialogBox from "../../../components/ShareDialogBox";
-import { Lock } from "lucide-react";
+import { Share2, Home, FileText, ArrowLeft } from "lucide-react";
 
 Quill.register("modules/cursors", QuillCursors);
 
@@ -239,7 +239,7 @@ export default function ShowEditor({
   };
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {showModal && (
         <ShareDialogBox
           selectedDocument={selectedDocument}
@@ -247,33 +247,46 @@ export default function ShowEditor({
         />
       )}
 
-      <div className="pl-3 mb-3 mt-3 pr-5 w-[100%] flex flex-wrap items-center justify-between">
-        <div className="mb-2 text-2xl font-semibold">{documentTitle}</div>
-        <div className="flex justify-between items-center">
-          <Link
-            className="pr-3 underline text-slate-400 active:scale-90 transition-transform"
-            to="/allDocuments"
-          >
-            Home
-          </Link>
-          <button
-            onClick={() => {
-              handleShareDocumentClick();
-            }}
-            className="bg-blue-300 hover:bg-blue-400 p-1 pl-5 pr-5 text-lg font-semibold rounded-3xl flex items-center active:scale-90 transition-transform"
-          >
-            <Lock size={18} color="#000000" />
-            <div>Share</div>
-          </button>
+      {/* Document Title Bar - Full Width */}
+      <div className="w-full bg-white border-b border-slate-200 shadow-sm">
+        <div className="px-6 md:px-8 py-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          {/* Title Section */}
+          <div className="flex flex-col flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent truncate">
+              {documentTitle || "Untitled Document"}
+            </h1>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <Link
+              to="/allDocuments"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-all duration-200 font-semibold text-sm border border-slate-300 hover:shadow-md active:scale-95"
+            >
+              <ArrowLeft size={16} />
+              <span className="hidden md:inline">Back</span>
+            </Link>
+            <button
+              onClick={() => {
+                handleShareDocumentClick();
+              }}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 font-semibold text-sm shadow-md hover:shadow-lg active:scale-95"
+            >
+              <Share2 size={16} />
+              <span className="hidden md:inline">Share</span>
+            </button>
+          </div>
         </div>
       </div>
-      {/* <div className="flex justify-center items-center h-full"> */}
-      <div
-        id="container"
-        className="flex flex-col items-center"
-        ref={wrapperRef}
-      ></div>
-      {/* </div> */}
+
+      {/* Editor Container - Full Width */}
+      <div className="w-full">
+        <div
+          id="container"
+          className="w-full min-h-[calc(100vh-150px)] flex flex-col justify-center items-center"
+          ref={wrapperRef}
+        ></div>
+      </div>
     </div>
   );
 }
