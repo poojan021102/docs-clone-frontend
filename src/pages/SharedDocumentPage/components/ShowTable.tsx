@@ -93,12 +93,6 @@ export default function ShowTable() {
                     <th className="px-6 py-4 text-left font-semibold text-sm">
                       Title
                     </th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm">
-                      Shared By
-                    </th>
-                    <th className="px-6 py-4 text-left font-semibold text-sm">
-                      Date
-                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -118,12 +112,6 @@ export default function ShowTable() {
                               {document.documentTitle}
                             </span>
                           </Link>
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 text-sm">
-                          {document.ownerEmail}
-                        </td>
-                        <td className="px-6 py-4 text-slate-600 text-sm">
-                          {formatDateString(document.createdAt)}
                         </td>
                       </tr>
                     );

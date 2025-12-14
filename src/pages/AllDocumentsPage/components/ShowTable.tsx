@@ -282,16 +282,19 @@ export default function ShowTable({ setShowModal, selectedDocument }: Props) {
                     <th className="px-6 py-4 text-left font-semibold text-sm">
                       Title
                     </th>
-                    {activeTab === "shared" ? (
+                    {/* {activeTab === "shared" ? (
                       <>
                         <th className="px-6 py-4 text-left font-semibold text-sm">
                           Shared By
                         </th>
                       </>
+                    ) : null} */}
+                    {activeTab === "ownerEmail" ? (
+                      <th className="px-6 py-4 text-left font-semibold text-sm">
+                        Created
+                      </th>
                     ) : null}
-                    <th className="px-6 py-4 text-left font-semibold text-sm">
-                      Created
-                    </th>
+
                     {activeTab === "my-documents" ? (
                       <th className="px-6 py-4 text-center font-semibold text-sm">
                         Actions
@@ -316,14 +319,7 @@ export default function ShowTable({ setShowModal, selectedDocument }: Props) {
                           </span>
                         </Link>
                       </td>
-                      {activeTab === "shared" && "ownerEmail" in document ? (
-                        <td className="px-6 py-4 text-slate-600 text-sm">
-                          {document.ownerEmail}
-                        </td>
-                      ) : null}
-                      <td className="px-6 py-4 text-slate-600 text-sm">
-                        {formatDateString(document.createdAt)}
-                      </td>
+
                       {activeTab === "my-documents" ? (
                         <td className="px-6 py-4">
                           <div className="flex items-center justify-center gap-2">
